@@ -88,7 +88,9 @@ def create_user():
 @app.route("/users", methods=["GET"])
 def get_users():
     users = User.query.all()
-    users_list = [{"id": user.id, "username": user.username} for user in users]
+    users_list = [
+        {"id": user.id, "username": user.username, "role": user.role} for user in users
+    ]
     return jsonify(users_list), 200
 
 
@@ -97,17 +99,22 @@ def get_users():
 def get_user(user_id):
     user = User.query.get(user_id)
     if user:
-        return jsonify({"id": user.id, "username": user.username}), 200
+        return (
+            jsonify({"id": user.id, "username": user.username, "role": user.role}),
+            200,
+        )
     return jsonify({"message": "User not found!"}), 404
 
 
 # atualizando senha do usuario
-@app.route("/update_password", methods=["PUT"])
+@app.route("/update_password/<int:user_id>", methods=["PUT"])
 @login_required
-def update_password():
+def update_password(user_id):
     data = request.get_json()
     new_password = data.get("new_password")
 
+    if user_id != current_user.id and current_user.role != "admin":
+        return jsonify({"message": "You can only update your own password!"}), 403
     if new_password:
         current_user.password = new_password
         db.session.commit()
@@ -117,13 +124,16 @@ def update_password():
 
 
 # deletando usuario
-@app.route("/delete_user", methods=["DELETE"])
+@app.route("/delete_user/<int:user_id>", methods=["DELETE"])
 @login_required  # apenas o próprio usuário logado pode deletar sua conta
-def delete_user():
-    data = request.get_json()
-    username = data.get("username")
+def delete_user(user_id):
+    # data = request.get_json()
+    # username = data.get("username")
 
-    user = User.query.filter_by(username=username).first()
+    user = User.query.get(user_id)
+    if current_user.id != user_id and current_user.role != "admin":
+        return jsonify({"message": "You can only delete your own account!"}), 403
+
     if user:
         db.session.delete(user)
         db.session.commit()
