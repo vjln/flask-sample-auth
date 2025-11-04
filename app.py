@@ -1,14 +1,14 @@
 from flask import Flask
-from flask_sqlalchemy import (
-    SQLAlchemy,
-)  # importando SQLAlchemy para conectar com banco de dados
+from models.user import User
+from database import db
 
+# default app setup, sempre fazer.
 app = Flask(__name__)
-app.config["SECRET_KEY"] = "sua_chave"  # Configurando chave bd
+app.config["SECRET_KEY"] = "minha_key"  # Configurando chave bd
 app.config["SQLALCHEMY_DATABASE_URI"] = (
     "sqlite:///database.db"  # Configurando URI do banco de dados
 )
-db = SQLAlchemy(app)  # Inicializando SQLAlchemy com a aplicação Flask
+db.init_app(app)  # Inicializando o banco de dados com a aplicação Flask
 
 
 @app.route("/hello", methods=["GET"])
