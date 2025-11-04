@@ -1,7 +1,13 @@
 from flask import Flask, request, jsonify
 from models.user import User
 from database import db
-from flask_login import LoginManager, login_user, current_user
+from flask_login import (
+    LoginManager,
+    login_user,
+    current_user,
+    logout_user,
+    login_required,
+)
 
 # default app setup, sempre fazer.
 app = Flask(__name__)
@@ -23,13 +29,14 @@ def load_user(user_id):
     return User.query.get(int(user_id))
 
 
+# fazendo lgion
 @app.route("/login", methods=["POST"])
 def login():
     data = request.get_json()
     username = data.get("username")
     password = data.get("password")
 
-    # fazendo login
+    # fazendo logica login
     if username and password:
         # busca cliente no banco de dados + valida se a senha bate.
         user = User.query.filter_by(username=username).first()
@@ -43,6 +50,14 @@ def login():
         jsonify({"message": "Wrong username or password!"}),
         400,
     )  # caso n forneça username ou senha
+
+
+# fazendo logout
+@app.route("/logout", methods=["GET"])
+@login_required  # apenas usuários logados podem fazer logout
+def logout():
+    logout_user()
+    return jsonify({"message": "Logout successful!"}), 200
 
 
 if __name__ == "__main__":
