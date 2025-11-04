@@ -1,6 +1,8 @@
 from flask import Flask, request, jsonify
 from models.user import User
 from database import db
+from dotenv import load_dotenv
+import os
 from flask_login import (
     LoginManager,
     login_user,
@@ -10,10 +12,13 @@ from flask_login import (
 )
 
 # default app setup, sempre fazer.
+load_dotenv()
 app = Flask(__name__)
-app.config["SECRET_KEY"] = "minha_key"  # Configurando chave bd
+# Configurando chave bd e banco de dados
+app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
 app.config["SQLALCHEMY_DATABASE_URI"] = (
-    "sqlite:///database.db"  # Configurando URI do banco de dados
+    f"mysql+pymysql://{os.getenv('DB_USER')}:{os.getenv('DB_PASSWORD')}@"
+    f"{os.getenv('DB_HOST')}:{os.getenv('DB_PORT')}/{os.getenv('DB_NAME')}"
 )
 
 login_manager = LoginManager()
