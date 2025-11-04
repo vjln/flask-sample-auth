@@ -60,6 +60,7 @@ def logout():
     return jsonify({"message": "Logout successful!"}), 200
 
 
+# criando usuario
 @app.route("/user", methods=["POST"])
 def create_user():
     data = request.get_json()
@@ -76,6 +77,54 @@ def create_user():
         return jsonify({"message": "User created successfully!"}), 201
 
     return jsonify({"message": "Username and password are required!"}), 400
+
+
+# pegando todos usuario
+@app.route("/users", methods=["GET"])
+def get_users():
+    users = User.query.all()
+    users_list = [{"id": user.id, "username": user.username} for user in users]
+    return jsonify(users_list), 200
+
+
+# pegando usuario por id
+@app.route("/users/<int:user_id>", methods=["GET"])
+def get_user(user_id):
+    user = User.query.get(user_id)
+    if user:
+        return jsonify({"id": user.id, "username": user.username}), 200
+    return jsonify({"message": "User not found!"}), 404
+
+
+# atualizando senha do usuario
+@app.route("/update_password", methods=["PUT"])
+@login_required
+def update_password():
+    data = request.get_json()
+    new_password = data.get("new_password")
+
+    if new_password:
+        current_user.password = new_password
+        db.session.commit()
+        return jsonify({"message": "Password updated successfully!"}), 200
+
+    return jsonify({"message": "New password is required!"}), 400
+
+
+# deletando usuario
+@app.route("/delete_user", methods=["DELETE"])
+@login_required  # apenas o próprio usuário logado pode deletar sua conta
+def delete_user():
+    data = request.get_json()
+    username = data.get("username")
+
+    user = User.query.filter_by(username=username).first()
+    if user:
+        db.session.delete(user)
+        db.session.commit()
+        return jsonify({"message": "Your user was deleted successfully!"}), 200
+
+    return jsonify({"message": "User not found!"}), 404
 
 
 if __name__ == "__main__":
