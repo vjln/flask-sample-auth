@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify
 from models.user import User
 from database import db
 from dotenv import load_dotenv
+import bcrypt
 import os
 from flask_login import (
     LoginManager,
@@ -46,7 +47,7 @@ def login():
         # busca cliente no banco de dados + valida se a senha bate.
         user = User.query.filter_by(username=username).first()
 
-        if user and user.password == password:
+        if user and bcrypt.checkpw(str.encode(password), str.encode(user.password)):
             login_user(user)
             print(current_user.is_authenticated)
             return jsonify({"message": "Login successful!", "username": username}), 200
@@ -76,7 +77,8 @@ def create_user():
         if User.query.filter_by(username=username).first():
             return jsonify({"message": "Username already exists!"}), 400
 
-        new_user = User(username=username, password=password, role="user")
+        hashed_password = bcrypt.hashpw(str.encode(password), bcrypt.gensalt())
+        new_user = User(username=username, password=hashed_password, role="user")
         db.session.add(new_user)
         db.session.commit()
         return jsonify({"message": "User created successfully!"}), 201
